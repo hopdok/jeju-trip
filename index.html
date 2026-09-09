@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제주 가족여행 🍊 9/19~9/25</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+  :root {
+    --ocean: #2EC4B6; --ocean-light: #6FE3D6;
+    --sand: #FFF6E6;  --sand-dark: #F5DFB8;
+    --coral: #FF9F1C; --coral-light: #FFC168;
+    --sky: #FFE066;   --sky-pale: #FFF7DA;
+    --leaf: #4FBF8B;  --amber: #C97B3D;
+    --teal: #3AAFA9;  --violet: #B185DB;
+    --text: #4A3527;  --text-muted: #9C8977;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Noto Sans KR',sans-serif; background:var(--sand); color:var(--text); }
+
+  /* HEADER */
+  header {
+    position:relative;
+    background:linear-gradient(160deg,#FF9F1C 0%,#FF6F59 45%,#2EC4B6 100%);
+    color:white; padding:60px 40px 80px; overflow:hidden; text-align:center;
+  }
+  header::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 80%,rgba(46,196,182,.35) 0%,transparent 70%),
+      radial-gradient(ellipse 40% 60% at 80% 20%,rgba(255,224,102,.35) 0%,transparent 60%);
+  }
+  .header-deco {
+    position:absolute; inset:0; pointer-events:none; font-size:1.6rem;
+    opacity:.5;
+  }
+  .header-deco span { position:absolute; animation:floaty 4s ease-in-out infinite; }
+  @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  .wave-top { position:absolute; bottom:-2px; left:0; right:0; height:60px; }
+  .wave-top path { fill:var(--sand); }
+  .header-tag {
+    display:inline-block; background:rgba(255,255,255,.15); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.3); border-radius:30px;
+    padding:6px 20px; font-size:.78rem; letter-spacing:.15em; text-transform:uppercase;
+    margin-bottom:20px; position:relative; animation:fadeDown .6s ease both;
+  }
+  header h1 {
+    font-family:'Gaegu',cursive; font-size:clamp(2rem,5vw,3.2rem);
+    font-weight:700; line-height:1.15; position:relative; animation:fadeDown .6s .1s ease both;
+  }
+  header h1 em { font-style:italic; font-weight:400; color:var(--sky); }
+  .header-sub { margin-top:14px; font-size:.9rem; color:rgba(255,255,255,.7); position:relative; animation:fadeDown .6s .2s ease both; }
+  .header-pills { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:24px; position:relative; animation:fadeDown .6s .3s ease both; }
+  .pill { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:5px 14px; font-size:.78rem; color:rgba(255,255,255,.9); }
+
+  /* 날씨 위젯 */
+  .weather-wrap {
+    background:white; border-radius:18px; padding:20px 22px; margin-bottom:32px;
+    box-shadow:0 2px 16px rgba(0,0,0,.07); animation:fadeUp .5s ease both;
+  }
+  .weather-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:16px; flex-wrap:wrap; gap:6px;
+  }
+  .weather-header > span:first-child {
+    font-family:'Gaegu',cursive; font-size:1rem; font-weight:600; color:var(--text);
+  }
+  .weather-updated { font-size:.68rem; color:var(--text-muted); }
+  .weather-grid {
+    display:grid; grid-template-columns:repeat(7,1fr); gap:10px;
+  }
+  .weather-day-card {
+    background:linear-gradient(160deg,var(--ocean) 0%,#1B8A7F 100%);
+    border-radius:14px; padding:14px 8px; color:white; text-align:center;
+  }
+  .weather-day-card.skeleton {
+    background:var(--sand); min-height:140px; border-radius:14px;
+    animation:pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .wdc-day  { font-size:.66rem; font-weight:600; opacity:.9; letter-spacing:.03em; margin-bottom:2px; }
+  .wdc-date { font-size:.62rem; opacity:.6; margin-bottom:10px; }
+  .wdc-ampm { display:grid; grid-template-columns:1fr 1fr; gap:1px; }
+  .wdc-ampm-divider { grid-column:1/-1; height:1px; background:rgba(255,255,255,.2); margin:4px 0; }
+  .wdc-half { padding:4px 2px; }
+  .wdc-half-label { font-size:.58rem; opacity:.65; margin-bottom:5px; letter-spacing:.03em; }
+  .wdc-half-icon { font-size:1.2rem; margin-bottom:4px; }
+  .wdc-half-temp { font-family:'Gaegu',cursive; font-size:1.05rem; font-weight:700; margin-bottom:2px; line-height:1; }
+  .wdc-half-desc { font-size:.58rem; opacity:.8; line-height:1.25; min-height:2.1em; }
+  .wdc-1 { background:linear-gradient(160deg,#2EC4B6,#1B8A7F); }
+  .wdc-2 { background:linear-gradient(160deg,#FF9F1C,#E8830A); }
+  .wdc-3 { background:linear-gradient(160deg,#6FCF97,#3EA36E); }
+  .wdc-4 { background:linear-gradient(160deg,#C97B3D,#A3612C); }
+  .wdc-5 { background:linear-gradient(160deg,#3AAFA9,#237F7A); }
+  .wdc-6 { background:linear-gradient(160deg,#B185DB,#8A5CC0); }
+  .wdc-7 { background:linear-gradient(160deg,#C97B3D,#A3612C); }
+  @media(max-width:800px){
+    .weather-grid { grid-template-columns:repeat(4,1fr); }
+  }
+  @media(max-width:500px){
+    .weather-grid { grid-template-columns:repeat(2,1fr); }
+  }
+
+  /* MAIN */
+  main { max-width:900px; margin:0 auto; padding:40px 20px 80px; }
+
+  /* MAP */
+  .map-section {
+    background:white; border-radius:18px;
+    box-shadow:0 2px 16px rgba(0,0,0,.08); margin-bottom:48px; animation:fadeUp .5s ease both;
+  }
+  .map-header { padding:18px 22px; border-bottom:1px solid #f0e8da; border-radius:18px 18px 0 0; background:white; }
+  .map-header h2 { font-family:'Gaegu',cursive; font-size:1rem; font-weight:600; }
+  .map-header p { font-size:.75rem; color:var(--text-muted); margin-top:3px; }
+  .map-tabs { display:flex; gap:8px; padding:12px 18px; border-bottom:1px solid #f0e8da; flex-wrap:wrap; background:white; }
+  .map-tab {
+    padding:5px 14px; border-radius:20px; font-size:.74rem; font-weight:500;
+    cursor:pointer; border:none; background:#f5ede0; color:var(--text-muted); transition:all .2s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .map-tab.active.all  { background:var(--text);  color:white; }
+  .map-tab.active.d1   { background:var(--ocean); color:white; }
+  .map-tab.active.d3   { background:var(--leaf);  color:white; }
+  .map-tab.active.d7   { background:var(--amber); color:white; }
+  #map { height:420px; width:100%; display:block; min-height:280px; position:relative; z-index:0; }
+  .map-legend { padding:10px 18px; display:flex; gap:14px; flex-wrap:wrap; border-top:1px solid #f0e8da; background:#fafaf8; border-radius:0 0 18px 18px; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:.7rem; color:var(--text-muted); }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* DAY SECTIONS */
+  .day-section { margin-bottom:40px; animation:fadeUp .5s ease both; }
+  .day-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+  .day-badge { width:58px; height:58px; border-radius:38% 62% 63% 37% / 41% 44% 56% 59%; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; font-weight:500; line-height:1.1; box-shadow:0 3px 8px rgba(0,0,0,.12); }
+  .day-badge span:first-child { font-size:.6rem; text-transform:uppercase; letter-spacing:.1em; opacity:.8; }
+  .day-badge span:last-child { font-family:'Gaegu',cursive; font-size:1.4rem; font-weight:700; }
+  .d1{background:var(--ocean);color:white} .d2{background:var(--coral);color:white}
+  .d3{background:var(--leaf);color:white}  .d4{background:var(--amber);color:white}
+  .d5{background:var(--teal);color:white}  .d6{background:var(--violet);color:white}
+  .d7{background:var(--amber);color:white}
+  .day-title-block h2 { font-family:'Gaegu',cursive; font-size:1.15rem; font-weight:600; }
+  .day-title-block p { font-size:.8rem; color:var(--text-muted); margin-top:2px; }
+
+  /* TIMELINE */
+  .timeline { position:relative; padding-left:28px; }
+  .timeline::before { content:''; position:absolute; left:10px; top:8px; bottom:8px; width:2px; background:linear-gradient(to bottom,var(--sand-dark),var(--sand-dark) 80%,transparent); }
+  .timeline-item { position:relative; margin-bottom:16px; }
+  .timeline-item::before { content:''; position:absolute; left:-22px; top:14px; width:10px; height:10px; border-radius:50%; border:2px solid white; }
+  .tl-ocean::before { background:var(--ocean); box-shadow:0 0 0 2px var(--ocean-light); }
+  .tl-leaf::before  { background:var(--leaf);  box-shadow:0 0 0 2px #6aad7a; }
+  .tl-sand::before  { background:var(--amber); box-shadow:0 0 0 2px #b8905a; }
+  .tl-warn::before  { background:#d97706;      box-shadow:0 0 0 2px #f59e0b; }
+
+  .event-card {
+    background:white; border-radius:14px; padding:16px 18px;
+    box-shadow:0 2px 12px rgba(0,0,0,.06); border-left:3px solid transparent;
+    transition:transform .2s,box-shadow .2s; position:relative;
+  }
+  .event-card.clickable { cursor:pointer; }
+  .event-card.clickable:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.1); }
+  .map-hint {
+    position:absolute; right:12px; top:12px;
+    font-size:.65rem; color:var(--ocean); background:var(--sky-pale);
+    padding:2px 8px; border-radius:8px; opacity:0; transition:opacity .2s;
+    pointer-events:none;
+  }
+  .event-card.clickable:hover .map-hint { opacity:1; }
+
+  .tmap-btn {
+    display:inline-flex; align-items:center; gap:5px;
+    margin-top:10px; padding:5px 12px; border-radius:20px; border:none;
+    background:#EA1E30; color:white; font-size:.72rem; font-weight:500;
+    font-family:'Noto Sans KR',sans-serif; cursor:pointer;
+    text-decoration:none; transition:background .2s;
+    box-shadow:0 1px 6px rgba(234,30,48,.35);
+  }
+  .tmap-btn:hover { background:#c8172a; }
+  .tmap-btn svg { flex-shrink:0; }
+  .b-ocean{border-left-color:var(--ocean)} .b-leaf{border-left-color:var(--leaf)}
+  .b-sand{border-left-color:var(--amber)} .b-warn{border-left-color:#d97706}
+
+  .event-time { font-size:.7rem; font-weight:500; color:var(--text-muted); margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+  .dot { display:inline-block; width:6px; height:6px; border-radius:50%; }
+  .event-name { font-family:'Gaegu',cursive; font-size:.98rem; font-weight:600; margin-bottom:5px; }
+  .event-note { font-size:.78rem; color:var(--text-muted); line-height:1.6; }
+  .event-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .tag { font-size:.68rem; padding:2px 9px; border-radius:10px; font-weight:500; }
+  .to{background:#E3F7F5;color:#1B8A7F} .tc{background:#FFE8D1;color:#D9720C}
+  .tl{background:#E4F8EC;color:#2F9E68}  .ts{background:#F7E9D7;color:#8C5A2B}
+  .tw{background:#FFF3C4;color:#8A6D1B}
+
+  /* BANNERS */
+  .hotel-banner { background:linear-gradient(135deg,var(--ocean),#1B8A7F); color:white; border-radius:14px; padding:14px 18px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+  .hotel-banner .icon { font-size:1.4rem; flex-shrink:0; }
+  .hotel-banner .lbl { font-size:.68rem; opacity:.75; text-transform:uppercase; letter-spacing:.1em; }
+  .hotel-banner .nm  { font-family:'Gaegu',cursive; font-size:.92rem; font-weight:600; margin-top:1px; }
+  .flight-banner { background:linear-gradient(135deg,#8A4A2E,#4A2416); color:white; border-radius:14px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+  .fi { display:flex; align-items:center; gap:12px; }
+  .ft { font-family:'Gaegu',cursive; font-size:1.2rem; font-weight:700; }
+  .fl { font-size:.68rem; opacity:.7; text-transform:uppercase; letter-spacing:.08em; margin-top:1px; }
+  .fa { font-size:1.2rem; opacity:.5; padding:0 8px; }
+  .car-banner { background:linear-gradient(135deg,var(--leaf),#2F8F66); color:white; border-radius:14px; padding:14px 18px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+  .car-banner .icon { font-size:1.4rem; flex-shrink:0; }
+  .car-banner .lbl { font-size:.68rem; opacity:.75; text-transform:uppercase; letter-spacing:.1em; }
+  .car-banner .nm  { font-family:'Gaegu',cursive; font-size:.92rem; font-weight:600; margin-top:1px; }
+
+  .warn-box { background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:.78rem; color:#92400e; display:flex; gap:8px; align-items:flex-start; }
+
+  .rest-card {
+    background:white; border-radius:14px; padding:18px 20px;
+    box-shadow:0 2px 12px rgba(0,0,0,.06); display:flex; align-items:center; gap:14px;
+  }
+  .rest-card .re { font-size:1.6rem; flex-shrink:0; }
+  .rest-card .rt { font-family:'Gaegu',cursive; font-size:.95rem; font-weight:600; margin-bottom:3px; }
+  .rest-card .rn { font-size:.78rem; color:var(--text-muted); line-height:1.5; }
+
+  /* TIPS */
+  .tips-section { background:white; border-radius:18px; padding:28px; box-shadow:0 2px 16px rgba(0,0,0,.06); margin-top:48px; animation:fadeUp .5s .5s ease both; }
+  .tips-section h3 { font-family:'Gaegu',cursive; font-size:1rem; font-weight:600; margin-bottom:18px; }
+  .tips-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; }
+  .tip-item { background:var(--sky-pale); border-radius:12px; padding:14px; font-size:.8rem; line-height:1.5; }
+  .tip-item .te { font-size:1.2rem; display:block; margin-bottom:6px; }
+  .tip-item strong { display:block; color:var(--ocean); font-size:.78rem; margin-bottom:2px; }
+
+  /* 맛집 섹션 */
+  .food-section { background:white; border-radius:18px; padding:28px; box-shadow:0 2px 16px rgba(0,0,0,.06); margin-top:32px; animation:fadeUp .5s .6s ease both; }
+  .food-section h3 { font-family:'Gaegu',cursive; font-size:1rem; font-weight:600; margin-bottom:6px; }
+  .food-section .food-sub { font-size:.78rem; color:var(--text-muted); margin-bottom:16px; }
+  .food-placeholder { background:var(--sky-pale); border-radius:12px; padding:16px 18px; font-size:.82rem; color:var(--text-muted); line-height:1.6; }
+
+  footer { text-align:center; padding:30px; font-size:.75rem; color:var(--text-muted); border-top:1px solid var(--sand-dark); }
+  .dl-btn {
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--leaf); color:white; border:none; border-radius:12px;
+    padding:12px 24px; font-family:'Noto Sans KR',sans-serif; font-size:.88rem;
+    font-weight:500; cursor:pointer; text-decoration:none;
+    box-shadow:0 2px 12px rgba(74,124,89,.35); transition:all .2s;
+    margin-bottom:16px;
+  }
+  .dl-btn:hover { background:#3a6347; transform:translateY(-1px); box-shadow:0 4px 18px rgba(74,124,89,.45); }
+
+  .leaflet-popup-content-wrapper { border-radius:12px!important; box-shadow:0 4px 20px rgba(0,0,0,.15)!important; }
+  .leaflet-popup-content { margin:12px 16px!important; min-width:180px; }
+  .pu-day  { font-size:.65rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+  .pu-name { font-family:'Gaegu',cursive; font-size:.92rem; font-weight:600; margin-bottom:4px; }
+  .pu-time { font-size:.72rem; color:var(--text-muted); }
+  .pu-note { font-size:.72rem; color:var(--text-muted); margin-top:5px; line-height:1.5; }
+
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(20px)}  to{opacity:1;transform:translateY(0)} }
+
+  @media(max-width:600px) {
+    header{padding:44px 24px 70px}
+    main{padding:30px 14px 60px}
+    #map{height:300px; min-height:300px;}
+    .tips-grid{grid-template-columns:1fr 1fr}
+    .map-tabs{gap:6px; padding:10px 12px;}
+    .map-tab{font-size:.7rem; padding:4px 10px;}
+    .map-header{padding:14px 16px;}
+    .event-card.clickable:hover .map-hint{opacity:0;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-deco">
+    <span style="left:8%;top:20%;animation-delay:0s">🍊</span>
+    <span style="left:85%;top:15%;animation-delay:.5s">🌼</span>
+    <span style="left:12%;top:70%;animation-delay:1s">🐬</span>
+    <span style="left:90%;top:65%;animation-delay:1.5s">🍊</span>
+    <span style="left:50%;top:8%;animation-delay:2s">🌊</span>
+  </div>
+  <div class="header-tag">🍊 Family Trip · Jeju 2026</div>
+  <h1>제주<br><em>가족여행 일정표</em></h1>
+  <p class="header-sub">3살 딸아이와 함께 · 코난비치(구좌읍) 6박 연박 · 렌터카 이동</p>
+  <div class="header-pills">
+    <span class="pill">✈️ 2026년 9월 19일(토) ~ 25일(금)</span>
+    <span class="pill">🚗 렌터카 이동</span>
+    <span class="pill">👶 3세 동반</span>
+    <span class="pill">🏨 코난비치 6박</span>
+  </div>
+  <svg class="wave-top" viewBox="0 0 1440 60" preserveAspectRatio="none">
+    <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,60 L0,60 Z"/>
+  </svg>
+</header>
+
+<main>
+
+  <!-- 날씨 위젯 -->
+  <div class="weather-wrap" id="weatherWrap">
+    <div class="weather-header">
+      <span>🌤️ 제주 여행 일정 날씨 예보</span>
+      <span class="weather-updated" id="wUpdated"></span>
+    </div>
+    <div class="weather-grid" id="weatherGrid">
+      <div class="weather-day-card skeleton" id="wd-0"></div>
+      <div class="weather-day-card skeleton" id="wd-1"></div>
+      <div class="weather-day-card skeleton" id="wd-2"></div>
+      <div class="weather-day-card skeleton" id="wd-3"></div>
+      <div class="weather-day-card skeleton" id="wd-4"></div>
+      <div class="weather-day-card skeleton" id="wd-5"></div>
+      <div class="weather-day-card skeleton" id="wd-6"></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-section">
+    <div class="map-header">
+      <h2>🗺️ 전체 일정 지도</h2>
+      <p>마커 클릭 → 장소 정보 | 일정 카드 클릭 → 지도 포커스 | Day 탭으로 필터링 (위치는 대략적 표시)</p>
+    </div>
+    <div class="map-tabs">
+      <button class="map-tab active all" data-day="all">전체 보기</button>
+      <button class="map-tab d1" data-day="1">Day 1 · 입도</button>
+      <button class="map-tab d3" data-day="3">Day 3 · 김녕</button>
+      <button class="map-tab d7" data-day="7">Day 7 · 귀국</button>
+    </div>
+    <div id="map"></div>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#2EC4B6"></div>Day 1</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6FCF97"></div>Day 3</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#C97B3D"></div>Day 7</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2EC4B6;outline:2px solid #FF9F1C;outline-offset:1px;border-radius:50%"></div>숙소</div>
+    </div>
+  </div>
+
+  <!-- DAY 1 -->
+  <section class="day-section">
+    <div class="day-header">
+      <div class="day-badge d1"><span>DAY</span><span>1</span></div>
+      <div class="day-title-block">
+        <h2>김포 → 제주 입도 → 렌터카 인수 → 코난비치 체크인</h2>
+        <p>9월 19일 (토) · 유아 동반, 여유있게 출발</p>
+      </div>
+    </div>
+    <div class="flight-banner">
+      <div class="fi"><span style="font-size:1.3rem">✈️</span><div><div class="ft">15:15 → 16:30</div><div class="fl">에어부산 BX8021 · 김포 → 제주</div></div></div>
+      <div class="fa">→</div>
+      <div><div style="font-size:.78rem;opacity:.8">공항 체크인 13:45부터</div><div style="font-size:.78rem;opacity:.8">도착 후 렌터카 인수</div></div>
+    </div>
+    <div class="car-banner">
+      <span class="icon">🚗</span>
+      <div><div class="lbl">렌터카</div><div class="nm">제주명품렌트카 · 디올뉴셀토스 2026 하이브리드 (6박 7일)</div></div>
+    </div>
+    <div class="hotel-banner">
+      <span class="icon">🏨</span>
+      <div><div class="lbl">1~7박 숙소</div><div class="nm">코난비치 (구좌읍 행원로4길 19-9)</div></div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item tl-ocean">
+        <div class="event-card clickable b-ocean" onclick="focusMarker(0)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--ocean)"></span>13:45</div>
+          <div class="event-name">✈️ 김포공항 체크인 · 수속</div>
+          <div class="event-note">에어부산 BX8021 탑승 수속. 유아 동반이라 여유있게 도착.</div>
+          <div class="event-tags"><span class="tag to">소요 약 1시간 30분</span><span class="tag ts">유아 동반</span></div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(0)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+      <div class="timeline-item tl-ocean">
+        <div class="event-card clickable b-ocean" onclick="focusMarker(1)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--ocean)"></span>15:15 ~ 16:30</div>
+          <div class="event-name">✈️ 김포 → 제주 (BX8021 탑승)</div>
+          <div class="event-note">비행 약 1시간 15분. 도착 후 수하물 수취.</div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(1)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+      <div class="timeline-item tl-ocean">
+        <div class="event-card clickable b-ocean" onclick="focusMarker(1)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--ocean)"></span>17:30</div>
+          <div class="event-name">🚗 제주공항 렌터카 인수</div>
+          <div class="event-note">제주명품렌트카 · 디올뉴셀토스 2026 하이브리드. 유아 카시트 사전 요청 필수.</div>
+          <div class="event-tags"><span class="tag tw">유아 카시트 사전 요청 필수</span></div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(1)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+      <div class="timeline-item tl-ocean">
+        <div class="event-card clickable b-ocean" onclick="focusMarker(2)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--ocean)"></span>18:30 ~</div>
+          <div class="event-name">🏨 코난비치 체크인</div>
+          <div class="event-note">공항 → 숙소 약 1시간. 체크인은 15:00부터 가능. 6박 연박이라 짐 이동 없이 편하게 머무름.</div>
+          <div class="event-tags"><span class="tag tl">체크인 15:00~</span><span class="tag to">6박 연박</span></div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(2)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 2 -->
+  <section class="day-section">
+    <div class="day-header">
+      <div class="day-badge d2"><span>DAY</span><span>2</span></div>
+      <div class="day-title-block">
+        <h2>코난비치 자유 일정</h2>
+        <p>9월 20일 (일) · 숙소 연박, 짐 이동 없음</p>
+      </div>
+    </div>
+    <div class="rest-card">
+      <span class="re">🏖️</span>
+      <div><div class="rt">코난비치 연박</div><div class="rn">정해진 일정 없이 자유롭게 쉬는 날. 숙소 주변 산책이나 근처 해변 방문 등으로 여유롭게 보내기 좋아요.</div></div>
+    </div>
+  </section>
+
+  <!-- DAY 3 -->
+  <section class="day-section">
+    <div class="day-header">
+      <div class="day-badge d3"><span>DAY</span><span>3</span></div>
+      <div class="day-title-block">
+        <h2>김녕해수욕장 가족 사진 촬영</h2>
+        <p>9월 21일 (월) · 오전 나들이</p>
+      </div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item tl-leaf">
+        <div class="event-card clickable b-leaf" onclick="focusMarker(3)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--leaf)"></span>09:30 ~ 10:30</div>
+          <div class="event-name">📸 김녕해수욕장 가족 사진 촬영</div>
+          <div class="event-note">에메랄드빛 바다와 하얀 모래가 아름다운 해변. 오전 시간대가 빛과 인파 모두 여유로워 촬영하기 좋음.</div>
+          <div class="event-tags"><span class="tag tl">소요 약 1시간</span><span class="tag ts">오전 촬영 추천</span></div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 4 -->
+  <section class="day-section">
+    <div class="day-header">
+      <div class="day-badge d4"><span>DAY</span><span>4</span></div>
+      <div class="day-title-block">
+        <h2>코난비치 자유 일정</h2>
+        <p>9월 22일 (화) · 숙소 연박, 짐 이동 없음</p>
+      </div>
+    </div>
+    <div class="rest-card">
+      <span class="re">🏖️</span>
+      <div><div class="rt">코난비치 연박</div><div class="rn">정해진 일정 없이 자유롭게 쉬는 날.</div></div>
+    </div>
+  </section>
+
+  <!-- DAY 5 -->
+  <section class="day-section">
+    <div class="day-header">
+      <div class="day-badge d5"><span>DAY</span><span>5</span></div>
+      <div class="day-title-block">
+        <h2>코난비치 자유 일정</h2>
+        <p>9월 23일 (수) · 숙소 연박, 짐 이동 없음</p>
+      </div>
+    </div>
+    <div class="rest-card">
+      <span class="re">🏖️</span>
+      <div><div class="rt">코난비치 연박</div><div class="rn">정해진 일정 없이 자유롭게 쉬는 날.</div></div>
+    </div>
+  </section>
+
+  <!-- DAY 6 -->
+  <section class="day-section">
+    <div class="day-header">
+      <div class="day-badge d6"><span>DAY</span><span>6</span></div>
+      <div class="day-title-block">
+        <h2>코난비치 자유 일정</h2>
+        <p>9월 24일 (목) · 숙소 연박, 짐 이동 없음</p>
+      </div>
+    </div>
+    <div class="rest-card">
+      <span class="re">🏖️</span>
+      <div><div class="rt">코난비치 연박</div><div class="rn">여행 마지막 자유일. 다음날 체크아웃 대비 전날 짐 정리를 미리 해두면 좋아요.</div></div>
+    </div>
+  </section>
+
+  <!-- DAY 7 -->
+  <section class="day-section">
+    <div class="day-header">
+      <div class="day-badge d7"><span>DAY</span><span>7</span></div>
+      <div class="day-title-block">
+        <h2>체크아웃 → 자유 일정 → 렌터카 반납 → 귀경</h2>
+        <p>9월 25일 (금) · 귀국의 날</p>
+      </div>
+    </div>
+    <div class="warn-box" style="margin-bottom:16px">
+      <span style="font-size:.9rem;flex-shrink:0">⚠️</span>
+      <span><strong>시간 주의!</strong> 20:05 출발 BX8012 기준 렌터카는 <strong>18:30까지 제주공항 반납</strong> 필요. 반납 전 주유 · 차량 점검 여유있게.</span>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item tl-sand">
+        <div class="event-card clickable b-sand" onclick="focusMarker(2)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--amber)"></span>~ 11:00</div>
+          <div class="event-name">🏨 코난비치 체크아웃</div>
+          <div class="event-note">체크아웃은 11:00까지. 전날 짐 정리를 미리 해두는 것을 권장.</div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(2)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+      <div class="timeline-item tl-sand">
+        <div class="event-card b-sand">
+          <div class="event-time"><span class="dot" style="background:var(--amber)"></span>11:00 ~ 17:30</div>
+          <div class="event-name">🚗 제주 동부 / 시내 자유 일정</div>
+          <div class="event-note">렌터카 반납 전까지 자유 일정. 공항 근처에서 마무리할 수 있는 코스로 계획하면 편함.</div>
+        </div>
+      </div>
+      <div class="timeline-item tl-sand">
+        <div class="event-card clickable b-sand" onclick="focusMarker(1)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--amber)"></span>18:30</div>
+          <div class="event-name">🚗 제주공항 렌터카 반납</div>
+          <div class="event-note">제주명품렌트카 차량 반납. 주유 · 차량 점검 후 반납.</div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(1)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+      <div class="timeline-item tl-sand">
+        <div class="event-card clickable b-sand" onclick="focusMarker(1)">
+          <span class="map-hint">🗺️ 지도 보기</span>
+          <div class="event-time"><span class="dot" style="background:var(--amber)"></span>20:05 ~ 21:25</div>
+          <div class="event-name">✈️ 제주 → 김포 (BX8012 탑승)</div>
+          <div class="event-note">반납 후 수속 여유 확인. 비행 약 1시간 20분 후 김포 도착.</div>
+          <button class="tmap-btn" onclick="event.stopPropagation();openTmap(1)"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>티맵으로 보기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIPS -->
+  <section class="tips-section">
+    <h3>💡 3살 아이와 여행 팁</h3>
+    <div class="tips-grid">
+      <div class="tip-item"><span class="te">🚗</span><strong>유아 카시트</strong>제주명품렌트카 예약 시 유아 카시트 사전 요청 꼭 확인.</div>
+      <div class="tip-item"><span class="te">🧳</span><strong>연박의 여유</strong>코난비치 6박 연박이라 중간에 짐을 옮길 필요가 없어요. 여행 내내 편하게!</div>
+      <div class="tip-item"><span class="te">📸</span><strong>사진 촬영 타이밍</strong>김녕해수욕장은 오전 시간대가 빛도 좋고 사람도 적어 아이와 촬영하기 좋음.</div>
+      <div class="tip-item"><span class="te">⛽</span><strong>반납 전 주유</strong>렌터카 반납(18:30) 전 주유소 위치를 미리 확인해두면 시간 절약.</div>
+      <div class="tip-item"><span class="te">☀️</span><strong>자외선 차단</strong>9월 제주도 낮 자외선이 여전히 강한 편. 아이용 선크림 필수.</div>
+      <div class="tip-item"><span class="te">🧺</span><strong>전날 짐 정리</strong>7일차 체크아웃(11:00)이 이른 편이니 6일차 저녁에 짐을 미리 정리해두기.</div>
+    </div>
+  </section>
+
+  <!-- 맛집 정보 -->
+  <section class="food-section">
+    <h3>🍽️ 맛집 정보</h3>
+    <p class="food-sub">3살 딸아이와 가기 좋은 식당 · 위치 · 예산 정보</p>
+    <div class="food-placeholder">
+      ※ 아직 식당 조사가 진행 중이에요. Day · 위치 · 예산 · 예약 필요 여부 등이 정해지는 대로 이 섹션을 채워 업데이트할 예정입니다.
+    </div>
+  </section>
+
+</main>
+<footer>
+  <a class="dl-btn" href="제주_가족여행_일정표_v1.xlsx" download="제주_가족여행_일정표_v1.xlsx">
+    📥 엑셀 일정표 다운로드
+  </a>
+  <br>🍊 제주 가족여행 2026 · 9월 19일(토) ~ 25일(금)
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+var PLACES = [
+  { id:0, day:1, lat:37.5583, lng:126.7906, name:'김포공항',        emoji:'✈️', time:'13:45 체크인 / 15:15 출발', note:'에어부산 BX8021 탑승 수속',            color:'#2EC4B6', gname:'김포국제공항' },
+  { id:1, day:1, lat:33.5104, lng:126.4914, name:'제주공항',        emoji:'✈️', time:'16:30 도착 / 17:30 렌터카 인수 / Day7 반납 18:30 · 출발 20:05', note:'렌터카 인수 및 반납, 왕복 항공편', color:'#2EC4B6', gname:'제주국제공항' },
+  { id:2, day:1, lat:33.5563, lng:126.8380, name:'코난비치',        emoji:'🏨', time:'9/19 15:00~ 체크인 / 9/25 11:00까지', note:'구좌읍 행원로4길 19-9 · 6박 연박 숙소', color:'#2EC4B6', hotel:true, gname:'코난비치 제주 구좌읍 행원로4길 19-9' },
+  { id:3, day:3, lat:33.5580, lng:126.7592, name:'김녕해수욕장',    emoji:'📸', time:'09:30 ~ 10:30',              note:'가족 사진 촬영',                       color:'#3EA36E', gname:'김녕해수욕장' },
+];
+
+window.openTmap = function(idx) {
+  var p = PLACES[idx];
+  var name = encodeURIComponent(p.gname || p.name);
+  // 티맵 앱 실행 스킴 (길찾기: 현재 위치 → 목적지)
+  var appUrl = 'tmap://route?goalx=' + p.lng + '&goaly=' + p.lat + '&goalname=' + name;
+  // 앱이 없거나 PC 등 스킴 실행이 안 되는 환경을 위한 웹 폴백
+  var webFallback = 'https://www.tmap.co.kr/';
+  var hidden = false;
+  var onVis = function() { if (document.hidden) hidden = true; };
+  document.addEventListener('visibilitychange', onVis);
+  window.location.href = appUrl;
+  setTimeout(function() {
+    document.removeEventListener('visibilitychange', onVis);
+    if (!hidden) { window.open(webFallback, '_blank'); }
+  }, 1500);
+};
+
+var map, markers = [];
+
+window.addEventListener('load', function() {
+
+  // ── 일정별 날씨 예보 (Open-Meteo, 무료·키 불필요) ──
+  var WMO_TEXT = {
+    0:'맑음',1:'대체로 맑음',2:'구름 조금',3:'흐림',
+    45:'안개',48:'안개',
+    51:'가벼운 이슬비',53:'이슬비',55:'강한 이슬비',
+    61:'약한 비',63:'비',65:'강한 비',
+    71:'약한 눈',73:'눈',75:'강한 눈',
+    80:'소나기',81:'소나기',82:'강한 소나기',
+    95:'뇌우',96:'뇌우(우박)',99:'뇌우(우박)',
+  };
+  var WMO_ICON = {
+    0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
+    45:'🌫️',48:'🌫️',
+    51:'🌦️',53:'🌧️',55:'🌧️',
+    61:'🌦️',63:'🌧️',65:'⛈️',
+    71:'🌨️',73:'❄️',75:'❄️',
+    80:'🌦️',81:'🌧️',82:'⛈️',
+    95:'⛈️',96:'⛈️',99:'⛈️',
+  };
+  var DAYS = [
+    { label:'Day 1', date:'9/19 (토)', cls:'wdc-1' },
+    { label:'Day 2', date:'9/20 (일)', cls:'wdc-2' },
+    { label:'Day 3', date:'9/21 (월)', cls:'wdc-3' },
+    { label:'Day 4', date:'9/22 (화)', cls:'wdc-4' },
+    { label:'Day 5', date:'9/23 (수)', cls:'wdc-5' },
+    { label:'Day 6', date:'9/24 (목)', cls:'wdc-6' },
+    { label:'Day 7', date:'9/25 (금)', cls:'wdc-7' },
+  ];
+
+  function fetchTripWeather() {
+    var url = 'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=33.5563&longitude=126.8380' +
+      '&daily=weathercode,temperature_2m_max,temperature_2m_min' +
+      '&timezone=Asia%2FSeoul' +
+      '&start_date=2026-09-19&end_date=2026-09-25';
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.timeout = 8000;
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        var d = resp.daily;
+        var grid = document.getElementById('weatherGrid');
+        grid.innerHTML = '';
+        for (var i = 0; i < 7; i++) {
+          var code = d.weathercode[i];
+          var max = Math.round(d.temperature_2m_max[i]);
+          var min = Math.round(d.temperature_2m_min[i]);
+          var card = document.createElement('div');
+          card.className = 'weather-day-card ' + DAYS[i].cls;
+          card.innerHTML =
+            '<div class="wdc-day">' + DAYS[i].label + '</div>' +
+            '<div class="wdc-date">' + DAYS[i].date + '</div>' +
+            '<div class="wdc-half-icon">' + (WMO_ICON[code] || '🌡️') + '</div>' +
+            '<div class="wdc-half-temp">' + max + '° / ' + min + '°</div>' +
+            '<div class="wdc-half-desc">' + (WMO_TEXT[code] || '-') + '</div>';
+          grid.appendChild(card);
+        }
+        document.getElementById('wUpdated').textContent = '업데이트: ' + new Date().toLocaleString('ko-KR');
+      } catch (e) {
+        document.getElementById('weatherWrap').style.display = 'none';
+      }
+    };
+    xhr.onerror = function() { document.getElementById('weatherWrap').style.display = 'none'; };
+    xhr.ontimeout = function() { document.getElementById('weatherWrap').style.display = 'none'; };
+    xhr.send();
+  }
+  fetchTripWeather();
+
+  // ── 지도 ──
+  map = L.map('map', { scrollWheelZoom:false }).setView([33.53, 126.75], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; OpenStreetMap contributors', maxZoom:18
+  }).addTo(map);
+
+  PLACES.forEach(function(p, idx) {
+    var icon = L.divIcon({
+      html: '<div style="background:' + p.color + ';width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:' + (p.hotel ? '2px solid #FF9F1C' : '2px solid white') + ';box-shadow:0 2px 6px rgba(0,0,0,.3)">' + p.emoji + '</div>',
+      className:'', iconSize:[30,30], iconAnchor:[15,15]
+    });
+    var m = L.marker([p.lat, p.lng], { icon:icon }).addTo(map);
+    m.bindPopup(
+      '<div class="pu-day" style="color:' + p.color + '">Day ' + p.day + '</div>' +
+      '<div class="pu-name">' + p.emoji + ' ' + p.name + '</div>' +
+      '<div class="pu-time">' + p.time + '</div>' +
+      '<div class="pu-note">' + p.note + '</div>'
+    );
+    markers[idx] = m;
+  });
+
+  window.focusMarker = function(idx) {
+    var p = PLACES[idx];
+    map.flyTo([p.lat, p.lng], 12, { duration:0.6 });
+    markers[idx].openPopup();
+  };
+
+  var tabs = document.querySelectorAll('.map-tab');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var day = tab.getAttribute('data-day');
+      markers.forEach(function(m, idx) {
+        var p = PLACES[idx];
+        var show = (day === 'all') || (String(p.day) === day);
+        var el = m.getElement();
+        if (el) el.style.display = show ? '' : 'none';
+      });
+      if (day === 'all') {
+        map.setView([33.53, 126.75], 9);
+      } else {
+        var pts = PLACES.filter(function(p){ return String(p.day) === day; });
+        if (pts.length) {
+          var group = L.featureGroup(pts.map(function(p){ return L.marker([p.lat,p.lng]); }));
+          map.fitBounds(group.getBounds().pad(0.3));
+        }
+      }
+    });
+  });
+
+  setTimeout(function(){ map.invalidateSize(); }, 300);
+});
+</script>
+</body>
+</html>
