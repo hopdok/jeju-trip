@@ -559,7 +559,7 @@
 var PLACES = [
   { id:0, day:1, lat:37.5583, lng:126.7906, name:'김포공항',        emoji:'✈️', time:'13:45 체크인 / 15:15 출발', note:'에어부산 BX8021 탑승 수속',            color:'#2EC4B6', gname:'김포국제공항' },
   { id:1, day:1, lat:33.5104, lng:126.4914, name:'제주공항',        emoji:'✈️', time:'16:30 도착 / 17:30 렌터카 인수 / Day7 반납 18:30 · 출발 20:05', note:'렌터카 인수 및 반납, 왕복 항공편', color:'#2EC4B6', gname:'제주국제공항' },
-  { id:2, day:1, lat:33.5563, lng:126.8380, name:'코난비치',        emoji:'🏨', time:'9/19 15:00~ 체크인 / 9/25 11:00까지', note:'구좌읍 행원로4길 19-9 · 6박 연박 숙소', color:'#2EC4B6', hotel:true, gname:'코난비치 제주 구좌읍 행원로4길 19-9' },
+  { id:2, day:1, lat:33.552594, lng:126.806306, name:'코난비치',        emoji:'🏨', time:'9/19 15:00~ 체크인 / 9/25 11:00까지', note:'구좌읍 행원로4길 19-9 · 6박 연박 숙소', color:'#2EC4B6', hotel:true, gname:'코난비치 제주 구좌읍 행원로4길 19-9' },
   { id:3, day:3, lat:33.5580, lng:126.7592, name:'김녕해수욕장',    emoji:'📸', time:'09:30 ~ 10:30',              note:'가족 사진 촬영',                       color:'#3EA36E', gname:'김녕해수욕장' },
 ];
 
@@ -615,7 +615,7 @@ window.addEventListener('load', function() {
 
   function fetchTripWeather() {
     var url = 'https://api.open-meteo.com/v1/forecast' +
-      '?latitude=33.5563&longitude=126.8380' +
+      '?latitude=33.552594&longitude=126.806306' +
       '&daily=weathercode,temperature_2m_max,temperature_2m_min' +
       '&timezone=Asia%2FSeoul' +
       '&start_date=2026-09-19&end_date=2026-09-25';
